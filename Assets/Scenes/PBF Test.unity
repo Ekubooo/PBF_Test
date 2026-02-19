@@ -255,8 +255,11 @@ MonoBehaviour:
   - centre: {x: -8.3, y: -1.3, z: 3.65}
     size: 7
     debugDisplayCol: {r: 1, g: 0.26909092, b: 0.08962262, a: 1}
-  debug_num_particles: 205379
-  debug_spawn_volume: 343
+  - centre: {x: -8.3, y: -1.3, z: -3.65}
+    size: 7
+    debugDisplayCol: {r: 0, g: 0.37616825, b: 1, a: 1}
+  debug_num_particles: 410758
+  debug_spawn_volume: 686
 --- !u!4 &647353485
 Transform:
   m_ObjectHideFlags: 0
