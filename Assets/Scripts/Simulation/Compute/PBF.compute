@@ -382,7 +382,7 @@ void CalcDeltaPosition(uint3 id : SV_DispatchThreadID)
             float S_corr = -S_corr_K * pow(abs(poly6 / WDeltaQ), S_corr_N);
             // float S_corr = -S_corr_K * pow(poly6 / WDeltaQ, S_corr_N);
             float lambda_j = LOperator[neighbourIndex];
-            float lambdaSum = lambda_i + lambda_j + S_corr;         // issue, lambia_i should not be here (is it?)
+            float lambdaSum = lambda_i + lambda_j + S_corr;   
             float3 currGrad = dirToNeighbour * DerivativeSpikyPow3(dstToNeighbour, smoothingRadius);     // issue of inv_rho0
             _deltaPos += lambdaSum * currGrad;
         }

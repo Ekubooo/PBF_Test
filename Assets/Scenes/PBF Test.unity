@@ -214,7 +214,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 647353485}
-  - component: {fileID: 647353484}
   - component: {fileID: 647353486}
   - component: {fileID: 647353483}
   - component: {fileID: 647353482}
@@ -256,51 +255,8 @@ MonoBehaviour:
   - centre: {x: -8.3, y: -1.3, z: 3.65}
     size: 7
     debugDisplayCol: {r: 1, g: 0.26909092, b: 0.08962262, a: 1}
-  - centre: {x: -8.3, y: -1.3, z: -3.65}
-    size: 7
-    debugDisplayCol: {r: 0.09019607, g: 0.3801795, b: 1, a: 1}
-  debug_num_particles: 410758
-  debug_spawn_volume: 686
---- !u!114 &647353484
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 647353481}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c8b3b79f98be3f34e8fefade4cef2ade, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  normalTimeScale: 1
-  slowTimeScale: 0.1
-  maxTimestepFPS: 60
-  iterationsPerFrame: 3
-  gravity: -10
-  smoothingRadius: 0.2
-  targetDensity: 630
-  pressureMultiplier: 288
-  nearPressureMultiplier: 2.16
-  viscosityStrength: 0
-  collisionDamping: 0.95
-  foamActive: 0
-  maxFoamParticleCount: 1280000
-  trappedAirSpawnRate: 70
-  spawnRateFadeInTime: 0.75
-  spawnRateFadeStartTime: 0.1
-  trappedAirVelocityMinMax: {x: 5, y: 25}
-  foamKineticEnergyMinMax: {x: 15, y: 80}
-  bubbleBuoyancy: 1.4
-  sprayClassifyMaxNeighbours: 5
-  bubbleClassifyMinNeighbours: 15
-  bubbleScale: 0.3
-  bubbleChangeScaleSpeed: 7
-  renderToTex3D: 0
-  densityTextureRes: 1
-  compute: {fileID: 7200000, guid: 9443696acfd0ebe4fb503b56d952256c, type: 3}
-  spawner: {fileID: 647353483}
-  DensityMap: {fileID: 0}
+  debug_num_particles: 205379
+  debug_spawn_volume: 343
 --- !u!4 &647353485
 Transform:
   m_ObjectHideFlags: 0
@@ -334,8 +290,8 @@ MonoBehaviour:
   iterationsPerFrame: 3
   solverIteration: 3
   gravity: -10
-  smoothingRadius: 0.2
-  targetDensity: 630
+  smoothingRadius: 0.025
+  targetDensity: 1
   pressureMultiplier: 288
   nearPressureMultiplier: 2.16
   viscosityStrength: 0
@@ -353,11 +309,10 @@ MonoBehaviour:
   bubbleScale: 0.5
   bubbleChangeScaleSpeed: 7
   lambdaEps: 100
-  deltaQ: 0.04
   S_corr_K: 0.01
   S_corr_N: 4
   renderToTex3D: 0
-  densityTextureRes: 1
+  densityTextureRes: 0
   compute: {fileID: 7200000, guid: 314c90887571f1248aedb9b08027052e, type: 3}
   spawner: {fileID: 647353483}
   DensityMap: {fileID: 0}
@@ -496,7 +451,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1294730514}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: abc562ac53fed4d4d93feb89391ef3e4, type: 3}
   m_Name: 

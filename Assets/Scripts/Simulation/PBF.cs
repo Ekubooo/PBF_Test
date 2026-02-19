@@ -21,8 +21,8 @@ namespace Seb.Fluid.Simulation
 
 		[Header("Simulation Settings")] 
 		public float gravity = -10;
-		public float smoothingRadius = 0.2f;
-		public float targetDensity = 630;
+		public float smoothingRadius = 0.05f;
+		public float targetDensity = 1;
 		public float pressureMultiplier = 288;
 		public float nearPressureMultiplier = 2.15f;
 		public float viscosityStrength = 0;
@@ -44,10 +44,9 @@ namespace Seb.Fluid.Simulation
 
 		[Header("PBF Params")] 
 		public float lambdaEps = 100.0f;
-		public float deltaQ = 0.01f;
 		public float S_corr_K = 0.01f;
 		public float S_corr_N = 4f;
-		float rho0;
+		float rho0, deltaQ;
 		
 
 		[Header("Volumetric Render Settings")] public bool renderToTex3D;
@@ -297,6 +296,7 @@ namespace Seb.Fluid.Simulation
 			{
 				float maxDeltaTime = maxTimestepFPS > 0 ? 1 / maxTimestepFPS : float.PositiveInfinity; // If framerate dips too low, run the simulation slower than real-time
 				float dt = Mathf.Min(Time.deltaTime * ActiveTimeScale, maxDeltaTime);
+				// RunSimulationFrame(1f/1000f);
 				RunSimulationFrame(dt);
 			}
 
@@ -382,9 +382,13 @@ namespace Seb.Fluid.Simulation
 			compute.SetFloat("K_SpikyPow2Grad", spikyPow2Grad);
 			compute.SetFloat("K_SpikyPow3Grad", spikyPow3Grad);
 			
-			rho0 = 315.0f / (64.0f * Mathf.PI * Mathf.Pow(smoothingRadius, 3.0f)) * (6643.09717f / 4774.64795f);
+			// rho0 = 315.0f / (64.0f * Mathf.PI * Mathf.Pow(smoothingRadius, 3.0f)) * (6643.09717f / 4774.64795f);
+			// rho0 = targetDensity;
+			rho0 = 1f;
 			compute.SetFloat("rho0",rho0);
 			compute.SetFloat("inv_rho0",1f/rho0);
+			deltaQ = 0.1f * smoothingRadius;
+			compute.SetFloat("deltaQ",deltaQ);	// 
 		}
 
 		void UpdateSettings(float stepDeltaTime, float frameDeltaTime)
@@ -421,7 +425,6 @@ namespace Seb.Fluid.Simulation
 			// compute.SetFloat("inv_rho0",1f/rho0);
 			
 			compute.SetFloat("lambdaEps", lambdaEps);
-			compute.SetFloat("deltaQ",deltaQ);
 			compute.SetFloat("S_corr_K",S_corr_K);
 			compute.SetFloat("S_corr_N",S_corr_N);
 

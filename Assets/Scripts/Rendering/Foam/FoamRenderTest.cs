@@ -15,7 +15,8 @@ namespace Seb.Fluid.Rendering
 		public Shader shaderBillboard;
 		public ComputeShader copyCountToArgsCompute;
 
-		FluidSim sim;
+		// FluidSim sim;
+		PBF sim;
 		Material mat;
 		Mesh mesh;
 		ComputeBuffer argsBuffer;
@@ -23,11 +24,11 @@ namespace Seb.Fluid.Rendering
 
 		void Awake()
 		{
-			sim = FindObjectOfType<FluidSim>();
+			sim = FindObjectOfType<PBF>();
 			sim.SimulationInitCompleted += Init;
 		}
 
-		void Init(FluidSim sim)
+		void Init(PBF sim)
 		{
 			mat = new Material(shaderBillboard);
 			mesh = QuadGenerator.GenerateQuadMesh();
