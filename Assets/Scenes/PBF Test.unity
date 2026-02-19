@@ -215,6 +215,7 @@ GameObject:
   m_Component:
   - component: {fileID: 647353485}
   - component: {fileID: 647353484}
+  - component: {fileID: 647353486}
   - component: {fileID: 647353483}
   - component: {fileID: 647353482}
   m_Layer: 0
@@ -267,7 +268,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 647353481}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c8b3b79f98be3f34e8fefade4cef2ade, type: 3}
   m_Name: 
@@ -315,6 +316,51 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &647353486
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 647353481}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2f16d0d484749b4bbf882160bbc4fef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  normalTimeScale: 1
+  slowTimeScale: 0.1
+  maxTimestepFPS: 60
+  iterationsPerFrame: 3
+  solverIteration: 3
+  gravity: -10
+  smoothingRadius: 0.2
+  targetDensity: 630
+  pressureMultiplier: 288
+  nearPressureMultiplier: 2.16
+  viscosityStrength: 0
+  collisionDamping: 0.95
+  foamActive: 0
+  maxFoamParticleCount: 1000
+  trappedAirSpawnRate: 70
+  spawnRateFadeInTime: 0.5
+  spawnRateFadeStartTime: 0
+  trappedAirVelocityMinMax: {x: 5, y: 25}
+  foamKineticEnergyMinMax: {x: 15, y: 80}
+  bubbleBuoyancy: 1.5
+  sprayClassifyMaxNeighbours: 5
+  bubbleClassifyMinNeighbours: 15
+  bubbleScale: 0.5
+  bubbleChangeScaleSpeed: 7
+  lambdaEps: 100
+  deltaQ: 0.04
+  S_corr_K: 0.01
+  S_corr_N: 4
+  renderToTex3D: 0
+  densityTextureRes: 1
+  compute: {fileID: 7200000, guid: 314c90887571f1248aedb9b08027052e, type: 3}
+  spawner: {fileID: 647353483}
+  DensityMap: {fileID: 0}
 --- !u!1 &881847624
 GameObject:
   m_ObjectHideFlags: 0
@@ -507,7 +553,7 @@ MonoBehaviour:
   gradientResolution: 50
   velocityDisplayMax: 8
   meshResolution: 3
-  sim: {fileID: 647353484}
+  sim: {fileID: 647353486}
   shaderShaded: {fileID: 4800000, guid: 638bb1bdb9b8e374e8a5cbcd595e3973, type: 3}
   shaderBillboard: {fileID: 4800000, guid: 13de1318fe7184e48bdf807b928b641b, type: 3}
 --- !u!4 &1294730517
