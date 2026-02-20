@@ -9,8 +9,8 @@
 #pragma kernel UpdateProperty  
 
 #pragma kernel CalculateViscosity
-#pragma kernel UpdateDensityTexture
-#pragma kernel UpdateWhiteParticles
+#pragma kernel UpdateDensityTexture 
+#pragma kernel UpdateWhiteParticles 
 #pragma kernel WhiteParticlePrepareNextFrame
 
 
@@ -221,8 +221,14 @@ void ApplyAndPredict(uint3 id : SV_DispatchThreadID)
     
     Velocities[id.x] += deltaTime * float3(0, gravity, 0);
     float3 pPos = Positions[id.x] + deltaTime * Velocities[id.x];
-    ResolveCollisionPos(pPos, collisionDamping);    // chunlei Fixed, damping here
+
+    // float3 currVel =  Velocities[id.x] + deltaTime * float3(0, gravity, 0);
+    // float3 pPos = Positions[id.x] + deltaTime * currVel;
+    // ResolveCollisionPos(pPos, collisionDamping);    // chunlei Fixed, damping here
+    // ResolveCollisions(pPos, currVel,collisionDamping);    
+    
     PredictedPositions[id.x] = pPos;
+    // Velocities[id.x] = currVel;
 }
 
 [numthreads(ThreadGroupSize, 1, 1)]
@@ -305,19 +311,18 @@ void CalcLagrangeOperator(uint3 id : SV_DispatchThreadID)
             if (sqrDstToNeighbour > sqrRadius) continue;
 
             float dstToNeighbour = sqrt(sqrDstToNeighbour);
-            float3 dirToNeighbour = dstToNeighbour > 0 ? offsetToNeighbour / dstToNeighbour : float3(0, 1, 0);
+            float3 dirToNeighbour = dstToNeighbour > 0 ? offsetToNeighbour / dstToNeighbour : float3(0, 0, 0);  // float3(0, 1, 0)
             neighbourCount++;
-
-            // Update pressure force    // ref
-            // pressureForce += dirToNeighbour * DensityDerivative(dstToNeighbour, smoothingRadius) * sharedPressure / densityNeighbour;
-            // pressureForce += dirToNeighbour * NearDensityDerivative(dstToNeighbour, smoothingRadius) * sharedNearPressure / nearDensityNeighbour;
-
-            // calc
-            density += SpikyKernelPow3(dstToNeighbour, smoothingRadius);      // spiky? or poly6?
-            float3 currGrad = dirToNeighbour * inv_rho0 * DerivativeSpikyPow3(dstToNeighbour, smoothingRadius);
             
+            // calc
+            density += SmoothingKernelPoly6(dstToNeighbour, smoothingRadius);      
+            float3 currGrad = dirToNeighbour * inv_rho0 * DerivativeSpikyPow3(dstToNeighbour, smoothingRadius);
             grad_i += currGrad;
-            if (neighbourIndex != id.x) grad_j += dot(currGrad, currGrad);
+            
+            if (neighbourIndex != id.x)
+            {
+                grad_j += dot(currGrad, currGrad);
+            }
             
         }
     }
@@ -384,7 +389,7 @@ void CalcDeltaPosition(uint3 id : SV_DispatchThreadID)
             float lambda_j = LOperator[neighbourIndex];
             float lambdaSum = lambda_i + lambda_j + S_corr;   
             float3 currGrad = dirToNeighbour * DerivativeSpikyPow3(dstToNeighbour, smoothingRadius);     // issue of inv_rho0
-            _deltaPos += lambdaSum * currGrad;
+            _deltaPos -= lambdaSum * currGrad;
         }
     }
     _deltaPos = _deltaPos * inv_rho0;
@@ -395,7 +400,9 @@ void CalcDeltaPosition(uint3 id : SV_DispatchThreadID)
 void UpdatePredictPosition(uint3 id : SV_DispatchThreadID)
 {
     if (id.x >= numParticles) return;
-    PredictedPositions[id.x] += DeltaPosition[id.x];
+    float3 pPos = PredictedPositions[id.x];
+    float3 dPos = DeltaPosition[id.x];
+    PredictedPositions[id.x] = pPos + dPos;
     // maybe collision here? (by essay)
 }
 
@@ -404,9 +411,9 @@ void UpdateProperty(uint3 id : SV_DispatchThreadID)
 {
     float3 pPos = PredictedPositions[id.x];
     float3 pos = Positions[id.x];
-    ResolveCollisionPos(pPos, collisionDamping);      // pPos need clamp by boundry here
-    float3 vel = (pPos - pos ) / deltaTime;
-    
+    // ResolveCollisionPos(pPos, collisionDamping);      // pPos need clamp by boundry here
+    float3 vel = (pPos - pos) / deltaTime;
+    ResolveCollisions(pPos, vel, collisionDamping);
     Positions[id.x] = pPos;
     Velocities[id.x] = vel;
 }

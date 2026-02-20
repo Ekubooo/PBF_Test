@@ -293,8 +293,8 @@ MonoBehaviour:
   iterationsPerFrame: 3
   solverIteration: 3
   gravity: -10
-  smoothingRadius: 0.025
-  targetDensity: 1
+  smoothingRadius: 0.2
+  targetDensity: 650
   pressureMultiplier: 288
   nearPressureMultiplier: 2.16
   viscosityStrength: 0
@@ -311,8 +311,8 @@ MonoBehaviour:
   bubbleClassifyMinNeighbours: 15
   bubbleScale: 0.5
   bubbleChangeScaleSpeed: 7
-  lambdaEps: 100
-  S_corr_K: 0.01
+  lambdaEps: 1000
+  S_corr_K: 0
   S_corr_N: 4
   renderToTex3D: 0
   densityTextureRes: 0
