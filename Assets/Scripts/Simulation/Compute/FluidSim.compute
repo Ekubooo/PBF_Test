@@ -412,7 +412,8 @@ void CalculateViscosity(uint3 id : SV_DispatchThreadID)
     if (id.x >= numParticles)
         return;
 
-    float3 pos = PredictedPositions[id.x];
+    // float3 pos = PredictedPositions[id.x];
+    float3 pos = Positions[id.x];
     int3 originCell = GetCell3D(pos, smoothingRadius);
     float sqrRadius = smoothingRadius * smoothingRadius;
 
@@ -441,7 +442,7 @@ void CalculateViscosity(uint3 id : SV_DispatchThreadID)
             if (neighbourIndex == id.x)
                 continue;
 
-            float3 neighbourPos = PredictedPositions[neighbourIndex];
+            float3 neighbourPos = Positions[neighbourIndex];
             float3 offsetToNeighbour = neighbourPos - pos;
             float sqrDstToNeighbour = dot(offsetToNeighbour, offsetToNeighbour);
 

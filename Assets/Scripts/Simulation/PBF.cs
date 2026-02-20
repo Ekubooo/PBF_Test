@@ -84,7 +84,7 @@ namespace Seb.Fluid.Simulation
 		private int calcDeltaPositionKernel;
 		private int updatePredictPositionKernel;
 		private int updatePropertyKernel;
-		// private int calculateViscosityKernel;
+		private int calcViscosityKernel;
 		
 		// private int UpdateDensityTextureKernel;
 		// private int UpdateWhiteParticlesKernel;
@@ -125,7 +125,7 @@ namespace Seb.Fluid.Simulation
 			calcDeltaPositionKernel		= compute.FindKernel("CalcDeltaPosition");
 			updatePredictPositionKernel	= compute.FindKernel("UpdatePredictPosition");
 			updatePropertyKernel		= compute.FindKernel("UpdateProperty");
-			// calculateViscosityKernel	= compute.FindKernel("CalculateViscosity");
+			calcViscosityKernel			= compute.FindKernel("CalculateViscosity");
 			
 			
 			positionBuffer			= CreateStructuredBuffer<float3>(numParticles);
@@ -238,6 +238,15 @@ namespace Seb.Fluid.Simulation
 				positionBuffer,
 				predictPositionBuffer,
 				velocityBuffer
+			});
+			
+			SetBuffers(compute, calcViscosityKernel, bufferNameLookup, new ComputeBuffer[]
+			{
+				velocityBuffer,
+				positionBuffer,
+				predictPositionBuffer,
+				spatialHash.SpatialOffsets,
+				spatialHash.SpatialKeys
 			});
 
 			// Render to 3d tex kernel
@@ -367,6 +376,7 @@ namespace Seb.Fluid.Simulation
 				Dispatch(compute, positionBuffer.count, kernelIndex: updatePredictPositionKernel);
 			}
 			Dispatch(compute, positionBuffer.count, kernelIndex: updatePropertyKernel);
+			Dispatch(compute, positionBuffer.count, kernelIndex: calcViscosityKernel);
 		}
 
 		void UpdateSmoothingConstants()
@@ -383,7 +393,7 @@ namespace Seb.Fluid.Simulation
 			compute.SetFloat("K_SpikyPow3Grad", spikyPow3Grad);
 			
 			rho0 = targetDensity;
-			deltaQ = 0.1f * smoothingRadius;
+			deltaQ = 0.3f * smoothingRadius;
 			compute.SetFloat("rho0",rho0);
 			compute.SetFloat("inv_rho0",1f/rho0);
 			compute.SetFloat("deltaQ",deltaQ);	

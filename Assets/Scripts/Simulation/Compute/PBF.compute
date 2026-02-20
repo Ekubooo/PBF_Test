@@ -219,16 +219,16 @@ void ApplyAndPredict(uint3 id : SV_DispatchThreadID)
 {
     if (id.x >= numParticles) return;
     
-    Velocities[id.x] += deltaTime * float3(0, gravity, 0);
-    float3 pPos = Positions[id.x] + deltaTime * Velocities[id.x];
+    // Velocities[id.x] += deltaTime * float3(0, gravity, 0);
+    // float3 pPos = Positions[id.x] + deltaTime * Velocities[id.x];
 
-    // float3 currVel =  Velocities[id.x] + deltaTime * float3(0, gravity, 0);
-    // float3 pPos = Positions[id.x] + deltaTime * currVel;
+    float3 currVel =  Velocities[id.x] + deltaTime * float3(0, gravity, 0);
+    float3 pPos = Positions[id.x] + deltaTime * currVel;
     // ResolveCollisionPos(pPos, collisionDamping);    // chunlei Fixed, damping here
-    // ResolveCollisions(pPos, currVel,collisionDamping);    
+    ResolveCollisions(pPos, currVel, collisionDamping);    
     
     PredictedPositions[id.x] = pPos;
-    // Velocities[id.x] = currVel;
+    Velocities[id.x] = currVel;
 }
 
 [numthreads(ThreadGroupSize, 1, 1)]

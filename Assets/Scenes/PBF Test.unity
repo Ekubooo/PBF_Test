@@ -294,10 +294,10 @@ MonoBehaviour:
   solverIteration: 3
   gravity: -10
   smoothingRadius: 0.2
-  targetDensity: 650
+  targetDensity: 700
   pressureMultiplier: 288
   nearPressureMultiplier: 2.16
-  viscosityStrength: 0
+  viscosityStrength: 0.05
   collisionDamping: 0.95
   foamActive: 0
   maxFoamParticleCount: 1000
@@ -312,7 +312,7 @@ MonoBehaviour:
   bubbleScale: 0.5
   bubbleChangeScaleSpeed: 7
   lambdaEps: 1000
-  S_corr_K: 0
+  S_corr_K: 0.0000001
   S_corr_N: 4
   renderToTex3D: 0
   densityTextureRes: 0
