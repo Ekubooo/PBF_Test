@@ -26,6 +26,7 @@ namespace Seb.Fluid.Simulation
 		public float pressureMultiplier = 288;
 		public float nearPressureMultiplier = 2.15f;
 		public float viscosityStrength = 0;
+		public float MaxDeltaVel = 1f/12f;
 		[Range(0, 1)] public float collisionDamping = 0.95f;
 
 		[Header("Foam Settings")] 
@@ -426,15 +427,18 @@ namespace Seb.Fluid.Simulation
 			compute.SetMatrix("localToWorld", transform.localToWorldMatrix);
 			compute.SetMatrix("worldToLocal", transform.worldToLocalMatrix);
 			
+			
+			
 			// PBF
 				// rho0 can be in UpdateSmoothingConstants()
 			// rho0 = targetDensity;
 			// compute.SetFloat("rho0",rho0);
 			// compute.SetFloat("inv_rho0",1f/rho0);
-			
 			compute.SetFloat("lambdaEps", lambdaEps);
 			compute.SetFloat("S_corr_K",S_corr_K);
 			compute.SetFloat("S_corr_N",S_corr_N);
+			
+			compute.SetFloat("g_MaxDeltaVel", MaxDeltaVel);
 
 			// Foam settings
 			float fadeInT = (spawnRateFadeInTime <= 0) ? 1 : Mathf.Clamp01((simTimer - spawnRateFadeStartTime) / spawnRateFadeInTime);

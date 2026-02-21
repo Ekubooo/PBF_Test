@@ -18,6 +18,8 @@
 #include "./SpatialHash3D.hlsl"
 
 static const int ThreadGroupSize = 256;
+static const float epsilon = 1e-2;
+static const float preDeltaTime = 1/120.0;
 
 // Buffers
 RWStructuredBuffer<float3> Positions;
@@ -61,7 +63,9 @@ const float2 interactionInputPoint;
 const float interactionInputStrength;
 const float interactionInputRadius;
 
-// PBF params       // not init yet
+const float g_MaxDeltaVel;      
+
+// PBF params       
 const float rho0;
 const float inv_rho0;
 const float lambdaEps;
@@ -99,56 +103,6 @@ const float bubbleScaleChangeSpeed;
 float Remap01(float val, float minVal, float maxVal)
 {
     return saturate((val - minVal) / (maxVal - minVal));
-}
-
-void ResolveCollisions(inout float3 pos, inout float3 vel, float collisionDamping)
-{
-    // Transform position/velocity to the local space of the bounding box
-    float3 posLocal = mul(worldToLocal, float4(pos, 1)).xyz;
-    float3 velocityLocal = mul(worldToLocal, float4(vel, 0)).xyz;
-
-    // Calculate distance from box on each axis (negative values are outside box)
-    const float3 halfSize = 0.5;
-    const float3 edgeDst = halfSize - abs(posLocal);
-
-    // Resolve collisions
-    if (edgeDst.x <= 0)
-    {
-        posLocal.x = halfSize.x * sign(posLocal.x);
-        velocityLocal.x *= -1 * collisionDamping;
-    }
-    if (edgeDst.y <= 0)
-    {
-        posLocal.y = halfSize.y * sign(posLocal.y);
-        velocityLocal.y *= -1 * collisionDamping;
-    }
-    if (edgeDst.z <= 0)
-    {
-        posLocal.z = halfSize.z * sign(posLocal.z);
-        velocityLocal.z *= -1 * collisionDamping;
-    }
-
-    // Transform resolved position/velocity back to world space
-    pos = mul(localToWorld, float4(posLocal, 1)).xyz;
-    vel = mul(localToWorld, float4(velocityLocal, 0)).xyz;
-}
-
-void ResolveCollisionPos(inout float3 pos, float collisionDamping)
-{
-    // Transform position/velocity to the local space of the bounding box
-    float3 posLocal = mul(worldToLocal, float4(pos, 1)).xyz;
-
-    // Calculate distance from box on each axis (negative values are outside box)
-    const float3 halfSize = 0.5;
-    const float3 edgeDst = halfSize - abs(posLocal);
-
-    // Resolve collisions
-    if (edgeDst.x <= 0) posLocal.x = halfSize.x * sign(posLocal.x);
-    if (edgeDst.y <= 0) posLocal.y = halfSize.y * sign(posLocal.y);
-    if (edgeDst.z <= 0) posLocal.z = halfSize.z * sign(posLocal.z);
-    
-    // Transform resolved position/velocity back to world space
-    pos = mul(localToWorld, float4(posLocal, 1)).xyz;
 }
 
 float2 CalculateDensitiesAtPoint(float3 pos)
@@ -214,6 +168,91 @@ float3 CalculateOrthonormal(float3 dir)
     return normalize(orthoVec);
 }
 
+void ResolveCollisions(inout float3 pos, inout float3 vel, float collisionDamping)
+{
+    // Transform position/velocity to the local space of the bounding box
+    float3 posLocal = mul(worldToLocal, float4(pos, 1)).xyz;
+    float3 velocityLocal = mul(worldToLocal, float4(vel, 0)).xyz;
+
+    // Calculate distance from box on each axis (negative values are outside box)
+    const float3 halfSize = 0.5;
+    const float3 edgeDst = halfSize - abs(posLocal);
+
+    // Resolve collisions
+    if (edgeDst.x <= 0)
+    {
+        posLocal.x = halfSize.x * sign(posLocal.x);
+        velocityLocal.x *= -1 * collisionDamping;
+    }
+    if (edgeDst.y <= 0)
+    {
+        posLocal.y = halfSize.y * sign(posLocal.y);
+        velocityLocal.y *= -1 * collisionDamping;
+    }
+    if (edgeDst.z <= 0)
+    {
+        posLocal.z = halfSize.z * sign(posLocal.z);
+        velocityLocal.z *= -1 * collisionDamping;
+    }
+
+    // Transform resolved position/velocity back to world space
+    pos = mul(localToWorld, float4(posLocal, 1)).xyz;
+    vel = mul(localToWorld, float4(velocityLocal, 0)).xyz;
+}
+
+void PosClapmingOrigin(inout float3 pos)
+{
+    uint seedX = asuint(pos.x);
+    uint seedY = asuint(pos.y);
+    uint seedZ = asuint(pos.z);
+    uint rngState = seedX * seedY * seedZ;
+    NextRandom(rngState);
+    
+    float3 posLocal = mul(worldToLocal, float4(pos, 1)).xyz;
+    float localScale = length(mul(worldToLocal, float4(1, 0, 0, 0)).xyz);
+    float LPRadius = smoothingRadius * localScale;
+    const float3 effectRadius = float3(0.5, 0.5, 0.5) - float3(LPRadius ,LPRadius,LPRadius);
+    const float3 edgeDst = effectRadius - abs(posLocal);
+
+    if (edgeDst.x <= 0)
+    {
+        float jitterX = RandomValue(rngState) * epsilon;
+        posLocal.x = (effectRadius.x - jitterX) * sign(posLocal.x);
+    }
+    if (edgeDst.x <= 0)
+    {
+        float jitterY = RandomValue(rngState) * epsilon;
+        posLocal.y = (effectRadius.y - jitterY) * sign(posLocal.y);
+    }
+    if (edgeDst.x <= 0)
+    {
+        float jitterZ = RandomValue(rngState) * epsilon;
+        posLocal.z = (effectRadius.z - jitterZ) * sign(posLocal.z);
+    }
+    
+    pos = mul(localToWorld, float4(posLocal, 1)).xyz;
+}
+
+void PosClapming(inout float3 pos)
+{
+    // Transform position/velocity to the local space of the bounding box
+    float3 posLocal = mul(worldToLocal, float4(pos, 1)).xyz;
+
+    // Calculate distance from box on each axis (negative values are outside box)
+    const float3 halfSize = 0.5;
+    const float3 edgeDst = halfSize - abs(posLocal);
+
+    // Resolve collisions
+    if (edgeDst.x <= 0) posLocal.x = halfSize.x * sign(posLocal.x);
+    if (edgeDst.x <= 0) posLocal.y = halfSize.y * sign(posLocal.y);
+    if (edgeDst.x <= 0) posLocal.z = halfSize.z * sign(posLocal.z);
+    
+    
+    // Transform resolved position/velocity back to world space
+    pos = mul(localToWorld, float4(posLocal, 1)).xyz;
+}
+
+
 [numthreads(ThreadGroupSize, 1, 1)]
 void ApplyAndPredict(uint3 id : SV_DispatchThreadID)
 {
@@ -224,7 +263,6 @@ void ApplyAndPredict(uint3 id : SV_DispatchThreadID)
 
     float3 currVel =  Velocities[id.x] + deltaTime * float3(0, gravity, 0);
     float3 pPos = Positions[id.x] + deltaTime * currVel;
-    // ResolveCollisionPos(pPos, collisionDamping);    // chunlei Fixed, damping here
     ResolveCollisions(pPos, currVel, collisionDamping);    
     
     PredictedPositions[id.x] = pPos;
@@ -378,7 +416,7 @@ void CalcDeltaPosition(uint3 id : SV_DispatchThreadID)
             if (sqrDstToNeighbour > sqrRadius) continue;
 
             float dstToNeighbour = sqrt(sqrDstToNeighbour);
-            float3 dirToNeighbour = dstToNeighbour > 0 ? offsetToNeighbour / dstToNeighbour : float3(0, 1, 0);
+            float3 dirToNeighbour = dstToNeighbour > 0 ? offsetToNeighbour / dstToNeighbour : float3(0, 0, 0); // (0, 1, 0) aslo fine, maybe?
             neighbourCount++;
 
             // calc
@@ -392,6 +430,7 @@ void CalcDeltaPosition(uint3 id : SV_DispatchThreadID)
             _deltaPos -= lambdaSum * currGrad;
         }
     }
+    
     _deltaPos = _deltaPos * inv_rho0;
     DeltaPosition[id.x] = _deltaPos;
 }
@@ -400,10 +439,9 @@ void CalcDeltaPosition(uint3 id : SV_DispatchThreadID)
 void UpdatePredictPosition(uint3 id : SV_DispatchThreadID)
 {
     if (id.x >= numParticles) return;
-    float3 pPos = PredictedPositions[id.x];
-    float3 dPos = DeltaPosition[id.x];
-    PredictedPositions[id.x] = pPos + dPos;
-    // maybe collision here? (by essay)
+    float3 currPos = PredictedPositions[id.x] + DeltaPosition[id.x];
+    // PosClapming(currPos);             // new from thinking 0220
+    PredictedPositions[id.x] = currPos;
 }
 
 [numthreads(ThreadGroupSize, 1, 1)]
@@ -411,9 +449,15 @@ void UpdateProperty(uint3 id : SV_DispatchThreadID)
 {
     float3 pPos = PredictedPositions[id.x];
     float3 pos = Positions[id.x];
-    // ResolveCollisionPos(pPos, collisionDamping);      // pPos need clamp by boundry here
     float3 vel = (pPos - pos) / deltaTime;
-    ResolveCollisions(pPos, vel, collisionDamping);
+    float3 currVel = Velocities[id.x];
+    float3 deltaVel = vel - currVel;
+    float deltaVelLenSQR = dot(deltaVel, deltaVel);
+    if (deltaVelLenSQR > g_MaxDeltaVel * g_MaxDeltaVel)
+    {
+        deltaVel = deltaVel * rsqrt(deltaVelLenSQR) * g_MaxDeltaVel;
+    }
+    
     Positions[id.x] = pPos;
     Velocities[id.x] = vel;
 }
