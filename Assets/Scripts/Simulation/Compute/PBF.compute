@@ -18,7 +18,7 @@
 #include "./SpatialHash3D.hlsl"
 
 static const int ThreadGroupSize = 256;
-static const float epsilon = 1e-2;
+static const float epsilon = 1e-5;
 static const float preDeltaTime = 1/120.0;
 
 // Buffers
@@ -26,7 +26,7 @@ RWStructuredBuffer<float3> Positions;
 RWStructuredBuffer<float3> PredictedPositions;
 RWStructuredBuffer<float3> Velocities;
 RWStructuredBuffer<float3> DeltaPosition;
-RWStructuredBuffer<float> Densities;            // float2 -> float
+RWStructuredBuffer<float> Densities; 
 RWStructuredBuffer<float> LOperator;               
 
 
@@ -200,8 +200,9 @@ void ResolveCollisions(inout float3 pos, inout float3 vel, float collisionDampin
     vel = mul(localToWorld, float4(velocityLocal, 0)).xyz;
 }
 
-void PosClapmingOrigin(inout float3 pos)
+void PosClapming2(inout float3 pos)
 {
+    // complicated one
     uint seedX = asuint(pos.x);
     uint seedY = asuint(pos.y);
     uint seedZ = asuint(pos.z);
@@ -219,12 +220,12 @@ void PosClapmingOrigin(inout float3 pos)
         float jitterX = RandomValue(rngState) * epsilon;
         posLocal.x = (effectRadius.x - jitterX) * sign(posLocal.x);
     }
-    if (edgeDst.x <= 0)
+    if (edgeDst.y <= 0)
     {
         float jitterY = RandomValue(rngState) * epsilon;
         posLocal.y = (effectRadius.y - jitterY) * sign(posLocal.y);
     }
-    if (edgeDst.x <= 0)
+    if (edgeDst.z <= 0)
     {
         float jitterZ = RandomValue(rngState) * epsilon;
         posLocal.z = (effectRadius.z - jitterZ) * sign(posLocal.z);
@@ -233,7 +234,7 @@ void PosClapmingOrigin(inout float3 pos)
     pos = mul(localToWorld, float4(posLocal, 1)).xyz;
 }
 
-void PosClapming(inout float3 pos)
+void PosClapming1(inout float3 pos)
 {
     // Transform position/velocity to the local space of the bounding box
     float3 posLocal = mul(worldToLocal, float4(pos, 1)).xyz;
@@ -244,11 +245,41 @@ void PosClapming(inout float3 pos)
 
     // Resolve collisions
     if (edgeDst.x <= 0) posLocal.x = halfSize.x * sign(posLocal.x);
-    if (edgeDst.x <= 0) posLocal.y = halfSize.y * sign(posLocal.y);
-    if (edgeDst.x <= 0) posLocal.z = halfSize.z * sign(posLocal.z);
-    
+    if (edgeDst.y <= 0) posLocal.y = halfSize.y * sign(posLocal.y);
+    if (edgeDst.z <= 0) posLocal.z = halfSize.z * sign(posLocal.z);
     
     // Transform resolved position/velocity back to world space
+    pos = mul(localToWorld, float4(posLocal, 1)).xyz;
+}
+
+void PosClapming(inout float3 pos)
+{
+    uint seedX = asuint(pos.x);
+    uint seedY = asuint(pos.y);
+    uint seedZ = asuint(pos.z);
+    uint rngState = seedX * seedY * seedZ;
+    NextRandom(rngState);
+    
+    float3 posLocal = mul(worldToLocal, float4(pos, 1)).xyz;
+    const float3 halfSize = 0.5;
+    const float3 edgeDst = halfSize - abs(posLocal);
+
+    if (edgeDst.x <= 0)
+    {
+        float jitterX = RandomValue(rngState) * epsilon;
+        posLocal.x = (halfSize.x - jitterX) * sign(posLocal.x);
+    }
+    if (edgeDst.y <= 0)
+    {
+        float jitterY = RandomValue(rngState) * epsilon;
+        posLocal.y = (halfSize.y - jitterY) * sign(posLocal.y);
+    }
+    if (edgeDst.z <= 0)
+    {
+        float jitterZ = RandomValue(rngState) * epsilon;
+        posLocal.z = (halfSize.z - jitterZ) * sign(posLocal.z);
+    }
+    
     pos = mul(localToWorld, float4(posLocal, 1)).xyz;
 }
 
@@ -262,7 +293,7 @@ void ApplyAndPredict(uint3 id : SV_DispatchThreadID)
     // float3 pPos = Positions[id.x] + deltaTime * Velocities[id.x];
 
     float3 currVel =  Velocities[id.x] + deltaTime * float3(0, gravity, 0);
-    float3 pPos = Positions[id.x] + deltaTime * currVel;
+    float3 pPos = Positions[id.x] + currVel * deltaTime;
     ResolveCollisions(pPos, currVel, collisionDamping);    
     
     PredictedPositions[id.x] = pPos;
@@ -440,7 +471,7 @@ void UpdatePredictPosition(uint3 id : SV_DispatchThreadID)
 {
     if (id.x >= numParticles) return;
     float3 currPos = PredictedPositions[id.x] + DeltaPosition[id.x];
-    // PosClapming(currPos);             // new from thinking 0220
+    PosClapming(currPos);             // 1 is good, 3 not stable
     PredictedPositions[id.x] = currPos;
 }
 
@@ -457,9 +488,12 @@ void UpdateProperty(uint3 id : SV_DispatchThreadID)
     {
         deltaVel = deltaVel * rsqrt(deltaVelLenSQR) * g_MaxDeltaVel;
     }
-    
+    currVel += deltaVel;
+    // ResolveCollisions(pPos, currVel, collisionDamping);
+    Velocities[id.x] = currVel;     
     Positions[id.x] = pPos;
-    Velocities[id.x] = vel;
+    // Velocities[id.x] = vel;    
+    
 }
 
 [numthreads(ThreadGroupSize, 1, 1)]

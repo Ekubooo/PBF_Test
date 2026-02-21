@@ -291,15 +291,14 @@ MonoBehaviour:
   slowTimeScale: 0.1
   maxTimestepFPS: 60
   iterationsPerFrame: 3
-  solverIteration: 3
+  solverIteration: 5
   gravity: -10
   smoothingRadius: 0.2
   targetDensity: 700
   pressureMultiplier: 288
   nearPressureMultiplier: 2.16
-  viscosityStrength: 0.05
-  MaxDeltaVel: 0
-  collisionDamping: 0.95
+  viscosityStrength: 0.025
+  collisionDamping: 0.99
   foamActive: 0
   maxFoamParticleCount: 1000
   trappedAirSpawnRate: 70

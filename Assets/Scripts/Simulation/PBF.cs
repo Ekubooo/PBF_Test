@@ -26,7 +26,7 @@ namespace Seb.Fluid.Simulation
 		public float pressureMultiplier = 288;
 		public float nearPressureMultiplier = 2.15f;
 		public float viscosityStrength = 0;
-		public float MaxDeltaVel = 1f/12f;
+		const float MaxDeltaVel = 3.5f;
 		[Range(0, 1)] public float collisionDamping = 0.95f;
 
 		[Header("Foam Settings")] 
