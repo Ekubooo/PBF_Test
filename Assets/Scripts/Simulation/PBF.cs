@@ -427,13 +427,7 @@ namespace Seb.Fluid.Simulation
 			compute.SetMatrix("localToWorld", transform.localToWorldMatrix);
 			compute.SetMatrix("worldToLocal", transform.worldToLocalMatrix);
 			
-			
-			
 			// PBF
-				// rho0 can be in UpdateSmoothingConstants()
-			// rho0 = targetDensity;
-			// compute.SetFloat("rho0",rho0);
-			// compute.SetFloat("inv_rho0",1f/rho0);
 			compute.SetFloat("lambdaEps", lambdaEps);
 			compute.SetFloat("S_corr_K",S_corr_K);
 			compute.SetFloat("S_corr_N",S_corr_N);

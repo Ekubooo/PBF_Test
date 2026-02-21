@@ -66,6 +66,20 @@ float DerivativeSpikyPow2(float dst, float radius)
 	return 0;
 }
 
+float ViscosityKernel(float dst, float radius)
+{
+	if (dst < radius)
+	{
+		float scale = 15 / (2 * PI * pow(abs(radius), 3));
+		float v = dst/radius;
+		float a1 = -1/2.0 * pow(v, 3);
+		float a2 = pow(v, 2);
+		float a3 = 1/2.0 * v;
+		return scale * (a1 + a2 + a3 - 1.0);
+	}
+	return 0;
+}
+
 float DensityKernel(float dst, float radius)
 {
 	//return SmoothingKernelPoly6(dst, radius);
@@ -86,4 +100,6 @@ float NearDensityDerivative(float dst, float radius)
 {
 	return DerivativeSpikyPow3(dst, radius);
 }
+
+
 
